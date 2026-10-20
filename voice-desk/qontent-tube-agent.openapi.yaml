@@ -1,0 +1,233 @@
+openapi: 3.1.0
+info:
+  title: Qontent Tube Studio
+  version: 0.1.0
+  description: >-
+    A curated slice of the Qontent Tube API for agents: list and create
+    projects, author Markdown voiceover scripts inside a project, generate
+    narration clips, and fetch the clip manifest.
+servers:
+  - url: http://127.0.0.1:8787
+    description: Local Qontent Tube API (loopback access only)
+tags:
+  - name: projects
+  - name: scripts
+  - name: audio
+paths:
+  /api/projects:
+    get:
+      operationId: listProjects
+      summary: List video projects
+      description: Returns all video projects.
+      tags: [projects]
+      responses:
+        '200':
+          description: Projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Project' }
+    post:
+      operationId: createProject
+      summary: Create a video project
+      description: Creates a video project with the supplied name.
+      tags: [projects]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, description: Human-readable project name }
+      responses:
+        '201':
+          description: Project created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Project' }
+  /api/projects/{projectId}/scripts:
+    get:
+      parameters:
+        - name: projectId
+          description: The ID of the project to list scripts for
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: listScripts
+      summary: List the voiceover scripts in a project
+      description: Returns the voiceover script summaries for the specified project.
+      tags: [scripts]
+      responses:
+        '200':
+          description: Script summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ScriptSummary' }
+    post:
+      parameters:
+        - name: projectId
+          description: The ID of the project to create a script in
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: createScript
+      summary: Create a new untitled Markdown script in a project
+      description: Creates an untitled Markdown script in the specified project.
+      tags: [scripts]
+      responses:
+        '201':
+          description: Script created, with its starter Markdown and revision 1
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Script' }
+  /api/scripts/{scriptId}:
+    get:
+      parameters:
+        - name: scriptId
+          description: The ID of the script to retrieve
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: getScript
+      summary: Read a script with its parsed scenes, speakers and dialogue segments
+      description: Returns the script Markdown and its parsed scenes, speakers, and dialogue segments.
+      tags: [scripts]
+      responses:
+        '200':
+          description: Script
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Script' }
+    put:
+      parameters:
+        - name: scriptId
+          description: The ID of the script to save
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: saveScript
+      summary: Save the script Markdown (optimistic concurrency on revision)
+      description: >-
+        Send the full Markdown and the revision you last read. Use the
+        Qontent Tube grammar: one # title, ## scenes, bold speaker cues such as
+        **ROBY:**, and [ON SCREEN: ...] directions. Returns the new revision.
+      tags: [scripts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [markdown, expectedRevision]
+              properties:
+                markdown: { type: string }
+                expectedRevision: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: Saved script with the new revision
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Script' }
+        '409':
+          description: The script changed since expectedRevision; read it again
+  /api/scripts/{scriptId}/generate:
+    post:
+      parameters:
+        - name: scriptId
+          description: The ID of the script to generate audio for
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: generateSegmentAudio
+      summary: Generate the narration clip for one dialogue segment
+      description: >-
+        Uses the voice assigned to the segment's speaker in the script's roster.
+        Consumes voice-generation credits.
+      tags: [audio]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [revision, segmentId]
+              properties:
+                revision: { type: integer, minimum: 1 }
+                segmentId: { type: string, description: 'For example segment-1-0, from getScript' }
+      responses:
+        '201':
+          description: Generated clip parts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Clip' }
+        '422':
+          description: The speaker has no voice in the selected roster
+  /api/scripts/{scriptId}/audio-manifest:
+    get:
+      parameters:
+        - name: scriptId
+          description: The ID of the script to get the audio manifest for
+          in: path
+          required: true
+          schema: { type: string }
+      operationId: getAudioManifest
+      summary: Get the ordered list of narration clips and their status for a script
+      description: Returns the narration clips for the script in order, including each clip's status.
+      tags: [audio]
+      responses:
+        '200':
+          description: Audio manifest
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scriptId: { type: string }
+                  revision: { type: integer }
+                  clips:
+                    type: array
+                    items: { $ref: '#/components/schemas/Clip' }
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        slug: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    ScriptSummary:
+      type: object
+      properties:
+        id: { type: string }
+        projectId: { type: string }
+        filename: { type: string }
+        title: { type: string }
+        revision: { type: integer }
+        updatedAt: { type: string, format: date-time }
+        sourceState: { type: string }
+    Script:
+      allOf:
+        - $ref: '#/components/schemas/ScriptSummary'
+        - type: object
+          properties:
+            markdown: { type: string }
+            parsed: { type: object, description: 'title, metadata, scenes, dialogue segments, issues' }
+    Clip:
+      type: object
+      properties:
+        id: { type: string }
+        segmentId: { type: string }
+        part: { type: integer }
+        status: { type: string, description: 'ready, missing, stale or error' }
+        durationMs: { type: integer }
+        audioUrl: { type: string, description: 'Relative URL of the WAV clip on the Qontent Tube server' }
+        error: { type: string }

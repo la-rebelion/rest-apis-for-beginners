@@ -1,0 +1,8 @@
+{
+  "name": "voice-desk-render-agent",
+  "private": true,
+  "type": "module",
+  "description": "Clooney's render agent: follows Qontent Tube voiceovers through the HAPI A2A Voice Desk (read-only).",
+  "scripts": { "start": "node render-agent.mjs" },
+  "dependencies": { "@a2a-js/sdk": "1.3.0" }
+}

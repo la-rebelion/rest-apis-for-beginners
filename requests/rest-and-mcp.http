@@ -1,0 +1,35 @@
+# Rebel Coffee Orders: REST and MCP requests from "REST APIs for Beginners".
+# Start the server first:  hapi serve orders --mcp
+@base = http://localhost:3000
+
+### REST: list every order
+GET {{base}}/orders
+
+### REST: filter by status (query parameter)
+GET {{base}}/orders?status=pending
+
+### REST: one order by ID (path parameter)
+GET {{base}}/orders/A-1001
+
+### REST: an order that does not exist -> 404
+GET {{base}}/orders/A-9999
+
+### REST: create an order (a write)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "item": "Lion Mug", "quantity": 1 }
+
+### MCP: which tools does this server offer?
+POST {{base}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{ "jsonrpc": "2.0", "id": 1, "method": "tools/list" }
+
+### MCP: call the getOrder tool (same controller as GET /orders/{orderId})
+POST {{base}}/mcp
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{ "jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": { "name": "getOrder", "arguments": { "orderId": "A-1001" } } }

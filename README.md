@@ -1,4 +1,26 @@
-# REST APIs for Beginners: Rebel Coffee Orders
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Course-REST%20APIs-1193b0?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/La%20Rebelion%20Labs-Challenge%20the%20Status%20Quo-da7756?style=for-the-badge" />
+</p>
+
+<h1 align="center">REST APIs for Beginners: Rebel Coffee Orders</h1>
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=wLME3KJ97PM"><b>Watch the Video Guide</b></a>
+</p>
+
+<p align="center">
+  <a href="https://rebelion.la"><b>Website</b></a>
+  ·
+  <a href="https://www.youtube.com/@LaRebelionLabs"><b>YouTube Channel</b></a>
+  ·
+  <a href="https://x.com/LaRebelionLabs"><b>X</b></a>
+  ·
+  <a href="https://www.linkedin.com/company/larebelion-labs"><b>LinkedIn</b></a>
+</p>
+
+---
 
 The companion repo for the La Rebelion Labs videos **"REST APIs for Beginners: From Your First Request to an AI That Can Use It"** and **"Your REST API Is Already an Agent: From REST to MCP to A2A"**.
 
